@@ -1,0 +1,99 @@
+package com.rdvmedical.serviceguser.service.impl;
+
+import com.rdvmedical.serviceguser.domain.entity.Appointment;
+import com.rdvmedical.serviceguser.respository.AppointmentRepository;
+import com.rdvmedical.serviceguser.service.IServiceAppointment;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+@Service
+@Transactional
+public class ServiceAppointmentImpl implements IServiceAppointment {
+
+    @Autowired
+    private AppointmentRepository appointmentRepository;
+
+    @Override
+    public List<Appointment> findAll() {
+        return appointmentRepository.findAll();
+    }
+
+    @Override
+    public Optional<Appointment> findById(Long id) {
+        return appointmentRepository.findById(id);
+    }
+
+    @Override
+    public List<Appointment> findByPatientId(Long patientId) {
+        return appointmentRepository.findByPatientId(patientId);
+    }
+
+    @Override
+    public List<Appointment> findByDoctorId(Long doctorId) {
+        return appointmentRepository.findByDoctorId(doctorId);
+    }
+
+    @Override
+    public List<Appointment> findByDoctorIdAndDateHeureBetween(Long doctorId, LocalDateTime start, LocalDateTime end) {
+        return appointmentRepository.findByDoctorIdAndDateHeureBetween(doctorId, start, end);
+    }
+
+    @Override
+    public List<Appointment> findByPatientIdAndDateHeureBetween(Long patientId, LocalDateTime start, LocalDateTime end) {
+        return appointmentRepository.findByPatientIdAndDateHeureBetween(patientId, start, end);
+    }
+
+    @Override
+    public List<Appointment> findByStatut(Appointment.AppointmentStatus statut) {
+        return appointmentRepository.findByStatut(statut);
+    }
+
+    @Override
+    public Appointment save(Appointment appointment) {
+        return appointmentRepository.save(appointment);
+    }
+
+    @Override
+    public Appointment update(Long id, Appointment appointment) {
+        Appointment existingAppointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Rendez-vous non trouvé avec l'id: " + id));
+        
+        existingAppointment.setPatient(appointment.getPatient());
+        existingAppointment.setDoctor(appointment.getDoctor());
+        existingAppointment.setDateHeure(appointment.getDateHeure());
+        existingAppointment.setDuree(appointment.getDuree());
+        existingAppointment.setStatut(appointment.getStatut());
+        existingAppointment.setMotif(appointment.getMotif());
+        existingAppointment.setNotes(appointment.getNotes());
+        
+        return appointmentRepository.save(existingAppointment);
+    }
+
+    @Override
+    public Appointment updateStatut(Long id, Appointment.AppointmentStatus statut) {
+        Appointment existingAppointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Rendez-vous non trouvé avec l'id: " + id));
+        
+        existingAppointment.setStatut(statut);
+        return appointmentRepository.save(existingAppointment);
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        if (!appointmentRepository.existsById(id)) {
+            throw new RuntimeException("Rendez-vous non trouvé avec l'id: " + id);
+        }
+        appointmentRepository.deleteById(id);
+    }
+
+    @Override
+    public boolean existsById(Long id) {
+        return appointmentRepository.existsById(id);
+    }
+}
+

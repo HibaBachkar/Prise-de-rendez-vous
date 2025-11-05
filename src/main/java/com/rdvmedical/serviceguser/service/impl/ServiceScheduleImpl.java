@@ -1,6 +1,8 @@
 package com.rdvmedical.serviceguser.service.impl;
 
+import com.rdvmedical.serviceguser.domain.entity.Doctor;
 import com.rdvmedical.serviceguser.domain.entity.Schedule;
+import com.rdvmedical.serviceguser.respository.DoctorRepository;
 import com.rdvmedical.serviceguser.respository.ScheduleRepository;
 import com.rdvmedical.serviceguser.service.IServiceSchedule;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +18,9 @@ public class ServiceScheduleImpl implements IServiceSchedule {
 
     @Autowired
     private ScheduleRepository scheduleRepository;
+
+    @Autowired
+    private DoctorRepository doctorRepository;
 
     @Override
     public List<Schedule> findAll() {
@@ -39,6 +44,12 @@ public class ServiceScheduleImpl implements IServiceSchedule {
 
     @Override
     public Schedule save(Schedule schedule) {
+        // Charger le docteur si seulement l'ID est fourni
+        if (schedule.getDoctor() != null && schedule.getDoctor().getId() != null && schedule.getDoctor().getNom() == null) {
+            Doctor doctor = doctorRepository.findById(schedule.getDoctor().getId())
+                    .orElseThrow(() -> new RuntimeException("Docteur non trouvé avec l'id: " + schedule.getDoctor().getId()));
+            schedule.setDoctor(doctor);
+        }
         return scheduleRepository.save(schedule);
     }
 
@@ -47,7 +58,15 @@ public class ServiceScheduleImpl implements IServiceSchedule {
         Schedule existingSchedule = scheduleRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Créneau non trouvé avec l'id: " + id));
         
-        existingSchedule.setDoctor(schedule.getDoctor());
+        // Charger le docteur si seulement l'ID est fourni
+        if (schedule.getDoctor() != null && schedule.getDoctor().getId() != null && schedule.getDoctor().getNom() == null) {
+            Doctor doctor = doctorRepository.findById(schedule.getDoctor().getId())
+                    .orElseThrow(() -> new RuntimeException("Docteur non trouvé avec l'id: " + schedule.getDoctor().getId()));
+            existingSchedule.setDoctor(doctor);
+        } else if (schedule.getDoctor() != null) {
+            existingSchedule.setDoctor(schedule.getDoctor());
+        }
+        
         existingSchedule.setJourSemaine(schedule.getJourSemaine());
         existingSchedule.setHeureDebut(schedule.getHeureDebut());
         existingSchedule.setHeureFin(schedule.getHeureFin());

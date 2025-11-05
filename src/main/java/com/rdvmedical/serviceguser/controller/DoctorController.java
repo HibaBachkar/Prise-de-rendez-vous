@@ -1,6 +1,8 @@
 package com.rdvmedical.serviceguser.controller;
 
+import com.rdvmedical.serviceguser.domain.dto.DoctorDTO;
 import com.rdvmedical.serviceguser.domain.entity.Doctor;
+import com.rdvmedical.serviceguser.domain.mapper.DoctorMapper;
 import com.rdvmedical.serviceguser.service.IServiceDoctor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,50 +18,58 @@ public class DoctorController {
     @Autowired
     private IServiceDoctor serviceDoctor;
 
+    @Autowired
+    private DoctorMapper doctorMapper;
+
     @GetMapping
-    public ResponseEntity<List<Doctor>> getAllDoctors() {
+    public ResponseEntity<List<DoctorDTO>> getAllDoctors() {
         List<Doctor> doctors = serviceDoctor.findAll();
-        return ResponseEntity.ok(doctors);
+        List<DoctorDTO> doctorDTOs = doctorMapper.toDTOList(doctors);
+        return ResponseEntity.ok(doctorDTOs);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Doctor> getDoctorById(@PathVariable Long id) {
+    public ResponseEntity<DoctorDTO> getDoctorById(@PathVariable Long id) {
         return serviceDoctor.findById(id)
-                .map(doctor -> ResponseEntity.ok(doctor))
+                .map(doctor -> ResponseEntity.ok(doctorMapper.toDTO(doctor)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/email/{email}")
-    public ResponseEntity<Doctor> getDoctorByEmail(@PathVariable String email) {
+    public ResponseEntity<DoctorDTO> getDoctorByEmail(@PathVariable String email) {
         return serviceDoctor.findByEmail(email)
-                .map(doctor -> ResponseEntity.ok(doctor))
+                .map(doctor -> ResponseEntity.ok(doctorMapper.toDTO(doctor)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/rpps/{numeroRpps}")
-    public ResponseEntity<Doctor> getDoctorByNumeroRpps(@PathVariable String numeroRpps) {
+    public ResponseEntity<DoctorDTO> getDoctorByNumeroRpps(@PathVariable String numeroRpps) {
         return serviceDoctor.findByNumeroRpps(numeroRpps)
-                .map(doctor -> ResponseEntity.ok(doctor))
+                .map(doctor -> ResponseEntity.ok(doctorMapper.toDTO(doctor)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/specialty/{specialtyId}")
-    public ResponseEntity<List<Doctor>> getDoctorsBySpecialty(@PathVariable Long specialtyId) {
+    public ResponseEntity<List<DoctorDTO>> getDoctorsBySpecialty(@PathVariable Long specialtyId) {
         List<Doctor> doctors = serviceDoctor.findBySpecialtyId(specialtyId);
-        return ResponseEntity.ok(doctors);
+        List<DoctorDTO> doctorDTOs = doctorMapper.toDTOList(doctors);
+        return ResponseEntity.ok(doctorDTOs);
     }
 
     @GetMapping("/actif/{actif}")
-    public ResponseEntity<List<Doctor>> getDoctorsByActif(@PathVariable Boolean actif) {
+    public ResponseEntity<List<DoctorDTO>> getDoctorsByActif(@PathVariable Boolean actif) {
         List<Doctor> doctors = serviceDoctor.findByActif(actif);
-        return ResponseEntity.ok(doctors);
+        List<DoctorDTO> doctorDTOs = doctorMapper.toDTOList(doctors);
+        return ResponseEntity.ok(doctorDTOs);
     }
 
     @PostMapping
-    public ResponseEntity<Doctor> createDoctor(@RequestBody Doctor doctor) {
+    public ResponseEntity<DoctorDTO> createDoctor(@RequestBody DoctorDTO doctorDTO) {
         try {
+            Doctor doctor = doctorMapper.toEntity(doctorDTO);
             Doctor createdDoctor = serviceDoctor.save(doctor);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdDoctor);
+            DoctorDTO createdDTO = doctorMapper.toDTO(createdDoctor);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdDTO);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         } catch (Exception e) {
@@ -68,10 +78,12 @@ public class DoctorController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Doctor> updateDoctor(@PathVariable Long id, @RequestBody Doctor doctor) {
+    public ResponseEntity<DoctorDTO> updateDoctor(@PathVariable Long id, @RequestBody DoctorDTO doctorDTO) {
         try {
+            Doctor doctor = doctorMapper.toEntity(doctorDTO);
             Doctor updatedDoctor = serviceDoctor.update(id, doctor);
-            return ResponseEntity.ok(updatedDoctor);
+            DoctorDTO updatedDTO = doctorMapper.toDTO(updatedDoctor);
+            return ResponseEntity.ok(updatedDTO);
         } catch (RuntimeException e) {
             if (e.getMessage().contains("non trouvé")) {
                 return ResponseEntity.notFound().build();
@@ -92,4 +104,3 @@ public class DoctorController {
         }
     }
 }
-

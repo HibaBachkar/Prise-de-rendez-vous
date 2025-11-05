@@ -1,6 +1,8 @@
 package com.rdvmedical.serviceguser.service.impl;
 
+import com.rdvmedical.serviceguser.domain.entity.Appointment;
 import com.rdvmedical.serviceguser.domain.entity.Consultation;
+import com.rdvmedical.serviceguser.respository.AppointmentRepository;
 import com.rdvmedical.serviceguser.respository.ConsultationRepository;
 import com.rdvmedical.serviceguser.service.IServiceConsultation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +18,9 @@ public class ServiceConsultationImpl implements IServiceConsultation {
     @Autowired
     private ConsultationRepository consultationRepository;
 
+    @Autowired
+    private AppointmentRepository appointmentRepository;
+
     @Override
     public Optional<Consultation> findById(Long id) {
         return consultationRepository.findById(id);
@@ -28,6 +33,12 @@ public class ServiceConsultationImpl implements IServiceConsultation {
 
     @Override
     public Consultation save(Consultation consultation) {
+        // Charger le rendez-vous si seulement l'ID est fourni
+        if (consultation.getAppointment() != null && consultation.getAppointment().getId() != null && consultation.getAppointment().getDateHeure() == null) {
+            Appointment appointment = appointmentRepository.findById(consultation.getAppointment().getId())
+                    .orElseThrow(() -> new RuntimeException("Rendez-vous non trouvé avec l'id: " + consultation.getAppointment().getId()));
+            consultation.setAppointment(appointment);
+        }
         return consultationRepository.save(consultation);
     }
 
@@ -36,7 +47,15 @@ public class ServiceConsultationImpl implements IServiceConsultation {
         Consultation existingConsultation = consultationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Consultation non trouvée avec l'id: " + id));
         
-        existingConsultation.setAppointment(consultation.getAppointment());
+        // Charger le rendez-vous si seulement l'ID est fourni
+        if (consultation.getAppointment() != null && consultation.getAppointment().getId() != null && consultation.getAppointment().getDateHeure() == null) {
+            Appointment appointment = appointmentRepository.findById(consultation.getAppointment().getId())
+                    .orElseThrow(() -> new RuntimeException("Rendez-vous non trouvé avec l'id: " + consultation.getAppointment().getId()));
+            existingConsultation.setAppointment(appointment);
+        } else if (consultation.getAppointment() != null) {
+            existingConsultation.setAppointment(consultation.getAppointment());
+        }
+        
         existingConsultation.setDateConsultation(consultation.getDateConsultation());
         existingConsultation.setCompteRendu(consultation.getCompteRendu());
         existingConsultation.setDiagnostic(consultation.getDiagnostic());

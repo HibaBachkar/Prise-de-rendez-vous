@@ -1,6 +1,8 @@
 package com.rdvmedical.serviceguser.controller;
 
+import com.rdvmedical.serviceguser.domain.dto.SpecialtyDTO;
 import com.rdvmedical.serviceguser.domain.entity.Specialty;
+import com.rdvmedical.serviceguser.domain.mapper.SpecialtyMapper;
 import com.rdvmedical.serviceguser.service.IServiceSpecialty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,31 +18,37 @@ public class SpecialtyController {
     @Autowired
     private IServiceSpecialty serviceSpecialty;
 
+    @Autowired
+    private SpecialtyMapper specialtyMapper;
+
     @GetMapping
-    public ResponseEntity<List<Specialty>> getAllSpecialties() {
+    public ResponseEntity<List<SpecialtyDTO>> getAllSpecialties() {
         List<Specialty> specialties = serviceSpecialty.findAll();
-        return ResponseEntity.ok(specialties);
+        List<SpecialtyDTO> specialtyDTOs = specialtyMapper.toDTOList(specialties);
+        return ResponseEntity.ok(specialtyDTOs);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Specialty> getSpecialtyById(@PathVariable Long id) {
+    public ResponseEntity<SpecialtyDTO> getSpecialtyById(@PathVariable Long id) {
         return serviceSpecialty.findById(id)
-                .map(specialty -> ResponseEntity.ok(specialty))
+                .map(specialty -> ResponseEntity.ok(specialtyMapper.toDTO(specialty)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/nom/{nom}")
-    public ResponseEntity<Specialty> getSpecialtyByNom(@PathVariable String nom) {
+    public ResponseEntity<SpecialtyDTO> getSpecialtyByNom(@PathVariable String nom) {
         return serviceSpecialty.findByNom(nom)
-                .map(specialty -> ResponseEntity.ok(specialty))
+                .map(specialty -> ResponseEntity.ok(specialtyMapper.toDTO(specialty)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public ResponseEntity<Specialty> createSpecialty(@RequestBody Specialty specialty) {
+    public ResponseEntity<SpecialtyDTO> createSpecialty(@RequestBody SpecialtyDTO specialtyDTO) {
         try {
+            Specialty specialty = specialtyMapper.toEntity(specialtyDTO);
             Specialty createdSpecialty = serviceSpecialty.save(specialty);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdSpecialty);
+            SpecialtyDTO createdDTO = specialtyMapper.toDTO(createdSpecialty);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdDTO);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         } catch (Exception e) {
@@ -49,10 +57,12 @@ public class SpecialtyController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Specialty> updateSpecialty(@PathVariable Long id, @RequestBody Specialty specialty) {
+    public ResponseEntity<SpecialtyDTO> updateSpecialty(@PathVariable Long id, @RequestBody SpecialtyDTO specialtyDTO) {
         try {
+            Specialty specialty = specialtyMapper.toEntity(specialtyDTO);
             Specialty updatedSpecialty = serviceSpecialty.update(id, specialty);
-            return ResponseEntity.ok(updatedSpecialty);
+            SpecialtyDTO updatedDTO = specialtyMapper.toDTO(updatedSpecialty);
+            return ResponseEntity.ok(updatedDTO);
         } catch (RuntimeException e) {
             if (e.getMessage().contains("non trouvé")) {
                 return ResponseEntity.notFound().build();

@@ -1,7 +1,11 @@
 package com.rdvmedical.serviceguser.service.impl;
 
 import com.rdvmedical.serviceguser.domain.entity.Appointment;
+import com.rdvmedical.serviceguser.domain.entity.Doctor;
+import com.rdvmedical.serviceguser.domain.entity.Patient;
 import com.rdvmedical.serviceguser.respository.AppointmentRepository;
+import com.rdvmedical.serviceguser.respository.DoctorRepository;
+import com.rdvmedical.serviceguser.respository.PatientRepository;
 import com.rdvmedical.serviceguser.service.IServiceAppointment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,6 +21,12 @@ public class ServiceAppointmentImpl implements IServiceAppointment {
 
     @Autowired
     private AppointmentRepository appointmentRepository;
+
+    @Autowired
+    private PatientRepository patientRepository;
+
+    @Autowired
+    private DoctorRepository doctorRepository;
 
     @Override
     public List<Appointment> findAll() {
@@ -55,6 +65,18 @@ public class ServiceAppointmentImpl implements IServiceAppointment {
 
     @Override
     public Appointment save(Appointment appointment) {
+        // Charger le patient si seulement l'ID est fourni
+        if (appointment.getPatient() != null && appointment.getPatient().getId() != null && appointment.getPatient().getNom() == null) {
+            Patient patient = patientRepository.findById(appointment.getPatient().getId())
+                    .orElseThrow(() -> new RuntimeException("Patient non trouvé avec l'id: " + appointment.getPatient().getId()));
+            appointment.setPatient(patient);
+        }
+        // Charger le docteur si seulement l'ID est fourni
+        if (appointment.getDoctor() != null && appointment.getDoctor().getId() != null && appointment.getDoctor().getNom() == null) {
+            Doctor doctor = doctorRepository.findById(appointment.getDoctor().getId())
+                    .orElseThrow(() -> new RuntimeException("Docteur non trouvé avec l'id: " + appointment.getDoctor().getId()));
+            appointment.setDoctor(doctor);
+        }
         return appointmentRepository.save(appointment);
     }
 
@@ -63,8 +85,24 @@ public class ServiceAppointmentImpl implements IServiceAppointment {
         Appointment existingAppointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Rendez-vous non trouvé avec l'id: " + id));
         
-        existingAppointment.setPatient(appointment.getPatient());
-        existingAppointment.setDoctor(appointment.getDoctor());
+        // Charger le patient si seulement l'ID est fourni
+        if (appointment.getPatient() != null && appointment.getPatient().getId() != null && appointment.getPatient().getNom() == null) {
+            Patient patient = patientRepository.findById(appointment.getPatient().getId())
+                    .orElseThrow(() -> new RuntimeException("Patient non trouvé avec l'id: " + appointment.getPatient().getId()));
+            existingAppointment.setPatient(patient);
+        } else if (appointment.getPatient() != null) {
+            existingAppointment.setPatient(appointment.getPatient());
+        }
+        
+        // Charger le docteur si seulement l'ID est fourni
+        if (appointment.getDoctor() != null && appointment.getDoctor().getId() != null && appointment.getDoctor().getNom() == null) {
+            Doctor doctor = doctorRepository.findById(appointment.getDoctor().getId())
+                    .orElseThrow(() -> new RuntimeException("Docteur non trouvé avec l'id: " + appointment.getDoctor().getId()));
+            existingAppointment.setDoctor(doctor);
+        } else if (appointment.getDoctor() != null) {
+            existingAppointment.setDoctor(appointment.getDoctor());
+        }
+        
         existingAppointment.setDateHeure(appointment.getDateHeure());
         existingAppointment.setDuree(appointment.getDuree());
         existingAppointment.setStatut(appointment.getStatut());

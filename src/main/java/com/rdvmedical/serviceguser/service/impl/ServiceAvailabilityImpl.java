@@ -1,7 +1,9 @@
 package com.rdvmedical.serviceguser.service.impl;
 
 import com.rdvmedical.serviceguser.domain.entity.Availability;
+import com.rdvmedical.serviceguser.domain.entity.Doctor;
 import com.rdvmedical.serviceguser.respository.AvailabilityRepository;
+import com.rdvmedical.serviceguser.respository.DoctorRepository;
 import com.rdvmedical.serviceguser.service.IServiceAvailability;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,9 @@ public class ServiceAvailabilityImpl implements IServiceAvailability {
 
     @Autowired
     private AvailabilityRepository availabilityRepository;
+
+    @Autowired
+    private DoctorRepository doctorRepository;
 
     @Override
     public List<Availability> findAll() {
@@ -45,6 +50,12 @@ public class ServiceAvailabilityImpl implements IServiceAvailability {
 
     @Override
     public Availability save(Availability availability) {
+        // Charger le docteur si seulement l'ID est fourni
+        if (availability.getDoctor() != null && availability.getDoctor().getId() != null && availability.getDoctor().getNom() == null) {
+            Doctor doctor = doctorRepository.findById(availability.getDoctor().getId())
+                    .orElseThrow(() -> new RuntimeException("Docteur non trouvé avec l'id: " + availability.getDoctor().getId()));
+            availability.setDoctor(doctor);
+        }
         return availabilityRepository.save(availability);
     }
 
@@ -53,7 +64,15 @@ public class ServiceAvailabilityImpl implements IServiceAvailability {
         Availability existingAvailability = availabilityRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Disponibilité non trouvée avec l'id: " + id));
         
-        existingAvailability.setDoctor(availability.getDoctor());
+        // Charger le docteur si seulement l'ID est fourni
+        if (availability.getDoctor() != null && availability.getDoctor().getId() != null && availability.getDoctor().getNom() == null) {
+            Doctor doctor = doctorRepository.findById(availability.getDoctor().getId())
+                    .orElseThrow(() -> new RuntimeException("Docteur non trouvé avec l'id: " + availability.getDoctor().getId()));
+            existingAvailability.setDoctor(doctor);
+        } else if (availability.getDoctor() != null) {
+            existingAvailability.setDoctor(availability.getDoctor());
+        }
+        
         existingAvailability.setDateDebut(availability.getDateDebut());
         existingAvailability.setDateFin(availability.getDateFin());
         existingAvailability.setDisponible(availability.getDisponible());

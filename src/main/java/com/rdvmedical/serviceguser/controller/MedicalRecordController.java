@@ -1,6 +1,8 @@
 package com.rdvmedical.serviceguser.controller;
 
+import com.rdvmedical.serviceguser.domain.dto.MedicalRecordDTO;
 import com.rdvmedical.serviceguser.domain.entity.MedicalRecord;
+import com.rdvmedical.serviceguser.domain.mapper.MedicalRecordMapper;
 import com.rdvmedical.serviceguser.service.IServiceMedicalRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -18,61 +20,73 @@ public class MedicalRecordController {
     @Autowired
     private IServiceMedicalRecord serviceMedicalRecord;
 
+    @Autowired
+    private MedicalRecordMapper medicalRecordMapper;
+
     @GetMapping
-    public ResponseEntity<List<MedicalRecord>> getAllMedicalRecords() {
+    public ResponseEntity<List<MedicalRecordDTO>> getAllMedicalRecords() {
         List<MedicalRecord> records = serviceMedicalRecord.findAll();
-        return ResponseEntity.ok(records);
+        List<MedicalRecordDTO> recordDTOs = medicalRecordMapper.toDTOList(records);
+        return ResponseEntity.ok(recordDTOs);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<MedicalRecord> getMedicalRecordById(@PathVariable Long id) {
+    public ResponseEntity<MedicalRecordDTO> getMedicalRecordById(@PathVariable Long id) {
         return serviceMedicalRecord.findById(id)
-                .map(record -> ResponseEntity.ok(record))
+                .map(record -> ResponseEntity.ok(medicalRecordMapper.toDTO(record)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/patient/{patientId}")
-    public ResponseEntity<List<MedicalRecord>> getMedicalRecordsByPatient(@PathVariable Long patientId) {
+    public ResponseEntity<List<MedicalRecordDTO>> getMedicalRecordsByPatient(@PathVariable Long patientId) {
         List<MedicalRecord> records = serviceMedicalRecord.findByPatientId(patientId);
-        return ResponseEntity.ok(records);
+        List<MedicalRecordDTO> recordDTOs = medicalRecordMapper.toDTOList(records);
+        return ResponseEntity.ok(recordDTOs);
     }
 
     @GetMapping("/patient/{patientId}/historique")
-    public ResponseEntity<List<MedicalRecord>> getMedicalRecordsHistoryByPatient(@PathVariable Long patientId) {
+    public ResponseEntity<List<MedicalRecordDTO>> getMedicalRecordsHistoryByPatient(@PathVariable Long patientId) {
         List<MedicalRecord> records = serviceMedicalRecord.findByPatientIdOrderByDateConsultationDesc(patientId);
-        return ResponseEntity.ok(records);
+        List<MedicalRecordDTO> recordDTOs = medicalRecordMapper.toDTOList(records);
+        return ResponseEntity.ok(recordDTOs);
     }
 
     @GetMapping("/patient/{patientId}/periode")
-    public ResponseEntity<List<MedicalRecord>> getMedicalRecordsByPatientAndPeriode(
+    public ResponseEntity<List<MedicalRecordDTO>> getMedicalRecordsByPatientAndPeriode(
             @PathVariable Long patientId,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date start,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date end) {
         List<MedicalRecord> records = serviceMedicalRecord.findByPatientIdAndDateConsultationBetween(patientId, start, end);
-        return ResponseEntity.ok(records);
+        List<MedicalRecordDTO> recordDTOs = medicalRecordMapper.toDTOList(records);
+        return ResponseEntity.ok(recordDTOs);
     }
 
     @GetMapping("/doctor/{doctorId}")
-    public ResponseEntity<List<MedicalRecord>> getMedicalRecordsByDoctor(@PathVariable Long doctorId) {
+    public ResponseEntity<List<MedicalRecordDTO>> getMedicalRecordsByDoctor(@PathVariable Long doctorId) {
         List<MedicalRecord> records = serviceMedicalRecord.findByDoctorId(doctorId);
-        return ResponseEntity.ok(records);
+        List<MedicalRecordDTO> recordDTOs = medicalRecordMapper.toDTOList(records);
+        return ResponseEntity.ok(recordDTOs);
     }
 
     @PostMapping
-    public ResponseEntity<MedicalRecord> createMedicalRecord(@RequestBody MedicalRecord medicalRecord) {
+    public ResponseEntity<MedicalRecordDTO> createMedicalRecord(@RequestBody MedicalRecordDTO medicalRecordDTO) {
         try {
+            MedicalRecord medicalRecord = medicalRecordMapper.toEntity(medicalRecordDTO);
             MedicalRecord createdRecord = serviceMedicalRecord.save(medicalRecord);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdRecord);
+            MedicalRecordDTO createdDTO = medicalRecordMapper.toDTO(createdRecord);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdDTO);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<MedicalRecord> updateMedicalRecord(@PathVariable Long id, @RequestBody MedicalRecord medicalRecord) {
+    public ResponseEntity<MedicalRecordDTO> updateMedicalRecord(@PathVariable Long id, @RequestBody MedicalRecordDTO medicalRecordDTO) {
         try {
+            MedicalRecord medicalRecord = medicalRecordMapper.toEntity(medicalRecordDTO);
             MedicalRecord updatedRecord = serviceMedicalRecord.update(id, medicalRecord);
-            return ResponseEntity.ok(updatedRecord);
+            MedicalRecordDTO updatedDTO = medicalRecordMapper.toDTO(updatedRecord);
+            return ResponseEntity.ok(updatedDTO);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         } catch (Exception e) {
@@ -90,4 +104,3 @@ public class MedicalRecordController {
         }
     }
 }
-

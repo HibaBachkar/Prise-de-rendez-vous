@@ -1,7 +1,9 @@
 package com.rdvmedical.serviceguser.service.impl;
 
 import com.rdvmedical.serviceguser.domain.entity.Insurance;
+import com.rdvmedical.serviceguser.domain.entity.Patient;
 import com.rdvmedical.serviceguser.respository.InsuranceRepository;
+import com.rdvmedical.serviceguser.respository.PatientRepository;
 import com.rdvmedical.serviceguser.service.IServiceInsurance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,9 @@ public class ServiceInsuranceImpl implements IServiceInsurance {
 
     @Autowired
     private InsuranceRepository insuranceRepository;
+
+    @Autowired
+    private PatientRepository patientRepository;
 
     @Override
     public List<Insurance> findAll() {
@@ -34,6 +39,12 @@ public class ServiceInsuranceImpl implements IServiceInsurance {
 
     @Override
     public Insurance save(Insurance insurance) {
+        // Charger le patient si seulement l'ID est fourni
+        if (insurance.getPatient() != null && insurance.getPatient().getId() != null && insurance.getPatient().getNom() == null) {
+            Patient patient = patientRepository.findById(insurance.getPatient().getId())
+                    .orElseThrow(() -> new RuntimeException("Patient non trouvé avec l'id: " + insurance.getPatient().getId()));
+            insurance.setPatient(patient);
+        }
         return insuranceRepository.save(insurance);
     }
 
@@ -42,11 +53,19 @@ public class ServiceInsuranceImpl implements IServiceInsurance {
         Insurance existingInsurance = insuranceRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Assurance non trouvée avec l'id: " + id));
         
+        // Charger le patient si seulement l'ID est fourni
+        if (insurance.getPatient() != null && insurance.getPatient().getId() != null && insurance.getPatient().getNom() == null) {
+            Patient patient = patientRepository.findById(insurance.getPatient().getId())
+                    .orElseThrow(() -> new RuntimeException("Patient non trouvé avec l'id: " + insurance.getPatient().getId()));
+            existingInsurance.setPatient(patient);
+        } else if (insurance.getPatient() != null) {
+            existingInsurance.setPatient(insurance.getPatient());
+        }
+        
         existingInsurance.setNom(insurance.getNom());
         existingInsurance.setNumeroAssure(insurance.getNumeroAssure());
         existingInsurance.setDateDebut(insurance.getDateDebut());
         existingInsurance.setDateFin(insurance.getDateFin());
-        existingInsurance.setPatient(insurance.getPatient());
         
         return insuranceRepository.save(existingInsurance);
     }

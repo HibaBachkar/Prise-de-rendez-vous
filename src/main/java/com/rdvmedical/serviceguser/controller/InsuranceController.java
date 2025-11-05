@@ -1,6 +1,8 @@
 package com.rdvmedical.serviceguser.controller;
 
+import com.rdvmedical.serviceguser.domain.dto.InsuranceDTO;
 import com.rdvmedical.serviceguser.domain.entity.Insurance;
+import com.rdvmedical.serviceguser.domain.mapper.InsuranceMapper;
 import com.rdvmedical.serviceguser.service.IServiceInsurance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,40 +18,49 @@ public class InsuranceController {
     @Autowired
     private IServiceInsurance serviceInsurance;
 
+    @Autowired
+    private InsuranceMapper insuranceMapper;
+
     @GetMapping
-    public ResponseEntity<List<Insurance>> getAllInsurances() {
+    public ResponseEntity<List<InsuranceDTO>> getAllInsurances() {
         List<Insurance> insurances = serviceInsurance.findAll();
-        return ResponseEntity.ok(insurances);
+        List<InsuranceDTO> insuranceDTOs = insuranceMapper.toDTOList(insurances);
+        return ResponseEntity.ok(insuranceDTOs);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Insurance> getInsuranceById(@PathVariable Long id) {
+    public ResponseEntity<InsuranceDTO> getInsuranceById(@PathVariable Long id) {
         return serviceInsurance.findById(id)
-                .map(insurance -> ResponseEntity.ok(insurance))
+                .map(insurance -> ResponseEntity.ok(insuranceMapper.toDTO(insurance)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/patient/{patientId}")
-    public ResponseEntity<List<Insurance>> getInsurancesByPatient(@PathVariable Long patientId) {
+    public ResponseEntity<List<InsuranceDTO>> getInsurancesByPatient(@PathVariable Long patientId) {
         List<Insurance> insurances = serviceInsurance.findByPatientId(patientId);
-        return ResponseEntity.ok(insurances);
+        List<InsuranceDTO> insuranceDTOs = insuranceMapper.toDTOList(insurances);
+        return ResponseEntity.ok(insuranceDTOs);
     }
 
     @PostMapping
-    public ResponseEntity<Insurance> createInsurance(@RequestBody Insurance insurance) {
+    public ResponseEntity<InsuranceDTO> createInsurance(@RequestBody InsuranceDTO insuranceDTO) {
         try {
+            Insurance insurance = insuranceMapper.toEntity(insuranceDTO);
             Insurance createdInsurance = serviceInsurance.save(insurance);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdInsurance);
+            InsuranceDTO createdDTO = insuranceMapper.toDTO(createdInsurance);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdDTO);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Insurance> updateInsurance(@PathVariable Long id, @RequestBody Insurance insurance) {
+    public ResponseEntity<InsuranceDTO> updateInsurance(@PathVariable Long id, @RequestBody InsuranceDTO insuranceDTO) {
         try {
+            Insurance insurance = insuranceMapper.toEntity(insuranceDTO);
             Insurance updatedInsurance = serviceInsurance.update(id, insurance);
-            return ResponseEntity.ok(updatedInsurance);
+            InsuranceDTO updatedDTO = insuranceMapper.toDTO(updatedInsurance);
+            return ResponseEntity.ok(updatedDTO);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         } catch (Exception e) {
@@ -67,4 +78,3 @@ public class InsuranceController {
         }
     }
 }
-

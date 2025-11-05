@@ -1,6 +1,8 @@
 package com.rdvmedical.serviceguser.controller;
 
+import com.rdvmedical.serviceguser.domain.dto.ConsultationDTO;
 import com.rdvmedical.serviceguser.domain.entity.Consultation;
+import com.rdvmedical.serviceguser.domain.mapper.ConsultationMapper;
 import com.rdvmedical.serviceguser.service.IServiceConsultation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -14,35 +16,42 @@ public class ConsultationController {
     @Autowired
     private IServiceConsultation serviceConsultation;
 
+    @Autowired
+    private ConsultationMapper consultationMapper;
+
     @GetMapping("/{id}")
-    public ResponseEntity<Consultation> getConsultationById(@PathVariable Long id) {
+    public ResponseEntity<ConsultationDTO> getConsultationById(@PathVariable Long id) {
         return serviceConsultation.findById(id)
-                .map(consultation -> ResponseEntity.ok(consultation))
+                .map(consultation -> ResponseEntity.ok(consultationMapper.toDTO(consultation)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/appointment/{appointmentId}")
-    public ResponseEntity<Consultation> getConsultationByAppointment(@PathVariable Long appointmentId) {
+    public ResponseEntity<ConsultationDTO> getConsultationByAppointment(@PathVariable Long appointmentId) {
         return serviceConsultation.findByAppointmentId(appointmentId)
-                .map(consultation -> ResponseEntity.ok(consultation))
+                .map(consultation -> ResponseEntity.ok(consultationMapper.toDTO(consultation)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public ResponseEntity<Consultation> createConsultation(@RequestBody Consultation consultation) {
+    public ResponseEntity<ConsultationDTO> createConsultation(@RequestBody ConsultationDTO consultationDTO) {
         try {
+            Consultation consultation = consultationMapper.toEntity(consultationDTO);
             Consultation createdConsultation = serviceConsultation.save(consultation);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdConsultation);
+            ConsultationDTO createdDTO = consultationMapper.toDTO(createdConsultation);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdDTO);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Consultation> updateConsultation(@PathVariable Long id, @RequestBody Consultation consultation) {
+    public ResponseEntity<ConsultationDTO> updateConsultation(@PathVariable Long id, @RequestBody ConsultationDTO consultationDTO) {
         try {
+            Consultation consultation = consultationMapper.toEntity(consultationDTO);
             Consultation updatedConsultation = serviceConsultation.update(id, consultation);
-            return ResponseEntity.ok(updatedConsultation);
+            ConsultationDTO updatedDTO = consultationMapper.toDTO(updatedConsultation);
+            return ResponseEntity.ok(updatedDTO);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         } catch (Exception e) {
@@ -60,4 +69,3 @@ public class ConsultationController {
         }
     }
 }
-

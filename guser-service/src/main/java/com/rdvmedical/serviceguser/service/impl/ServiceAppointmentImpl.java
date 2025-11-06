@@ -1,5 +1,6 @@
 package com.rdvmedical.serviceguser.service.impl;
 
+import com.rdvmedical.serviceguser.client.PatientServiceClient;
 import com.rdvmedical.serviceguser.domain.entity.Appointment;
 import com.rdvmedical.serviceguser.domain.entity.Doctor;
 import com.rdvmedical.serviceguser.domain.entity.Patient;
@@ -27,6 +28,12 @@ public class ServiceAppointmentImpl implements IServiceAppointment {
 
     @Autowired
     private DoctorRepository doctorRepository;
+
+    // Client Feign pour communication avec le service Patients (quand séparé)
+    // Pour l'instant, ce service reste dans guser-service, mais cet exemple montre
+    // comment utiliser OpenFeign pour la communication inter-services
+    @Autowired(required = false)
+    private PatientServiceClient patientServiceClient;
 
     @Override
     public List<Appointment> findAll() {
@@ -65,12 +72,27 @@ public class ServiceAppointmentImpl implements IServiceAppointment {
 
     @Override
     public Appointment save(Appointment appointment) {
-        // Charger le patient si seulement l'ID est fourni
-        if (appointment.getPatient() != null && appointment.getPatient().getId() != null && appointment.getPatient().getNom() == null) {
-            Patient patient = patientRepository.findById(appointment.getPatient().getId())
-                    .orElseThrow(() -> new RuntimeException("Patient non trouvé avec l'id: " + appointment.getPatient().getId()));
-            appointment.setPatient(patient);
+        // Exemple d'utilisation d'OpenFeign pour valider le patient via un autre service
+        // Si patientServiceClient est disponible (service patients séparé), on l'utilise
+        // Sinon, on utilise le repository local (comportement actuel)
+        if (patientServiceClient != null && appointment.getPatient() != null && appointment.getPatient().getId() != null) {
+            // Validation du patient via OpenFeign (communication inter-services)
+            Boolean patientExists = patientServiceClient.patientExists(appointment.getPatient().getId());
+            if (patientExists == null || !patientExists) {
+                throw new RuntimeException("Patient non trouvé dans le service Patients avec l'id: " + appointment.getPatient().getId());
+            }
+            // Charger le patient depuis le service distant si nécessaire
+            // PatientDTO patientDTO = patientServiceClient.getPatientById(appointment.getPatient().getId());
+            // Convertir DTO en Entity si nécessaire
+        } else {
+            // Comportement local actuel (quand tout est dans le même service)
+            if (appointment.getPatient() != null && appointment.getPatient().getId() != null && appointment.getPatient().getNom() == null) {
+                Patient patient = patientRepository.findById(appointment.getPatient().getId())
+                        .orElseThrow(() -> new RuntimeException("Patient non trouvé avec l'id: " + appointment.getPatient().getId()));
+                appointment.setPatient(patient);
+            }
         }
+
         // Charger le docteur si seulement l'ID est fourni
         if (appointment.getDoctor() != null && appointment.getDoctor().getId() != null && appointment.getDoctor().getNom() == null) {
             Doctor doctor = doctorRepository.findById(appointment.getDoctor().getId())
@@ -85,13 +107,21 @@ public class ServiceAppointmentImpl implements IServiceAppointment {
         Appointment existingAppointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Rendez-vous non trouvé avec l'id: " + id));
         
-        // Charger le patient si seulement l'ID est fourni
-        if (appointment.getPatient() != null && appointment.getPatient().getId() != null && appointment.getPatient().getNom() == null) {
-            Patient patient = patientRepository.findById(appointment.getPatient().getId())
-                    .orElseThrow(() -> new RuntimeException("Patient non trouvé avec l'id: " + appointment.getPatient().getId()));
-            existingAppointment.setPatient(patient);
-        } else if (appointment.getPatient() != null) {
-            existingAppointment.setPatient(appointment.getPatient());
+        // Exemple d'utilisation d'OpenFeign pour valider le patient
+        if (patientServiceClient != null && appointment.getPatient() != null && appointment.getPatient().getId() != null) {
+            Boolean patientExists = patientServiceClient.patientExists(appointment.getPatient().getId());
+            if (patientExists == null || !patientExists) {
+                throw new RuntimeException("Patient non trouvé dans le service Patients avec l'id: " + appointment.getPatient().getId());
+            }
+        } else {
+            // Comportement local actuel
+            if (appointment.getPatient() != null && appointment.getPatient().getId() != null && appointment.getPatient().getNom() == null) {
+                Patient patient = patientRepository.findById(appointment.getPatient().getId())
+                        .orElseThrow(() -> new RuntimeException("Patient non trouvé avec l'id: " + appointment.getPatient().getId()));
+                existingAppointment.setPatient(patient);
+            } else if (appointment.getPatient() != null) {
+                existingAppointment.setPatient(appointment.getPatient());
+            }
         }
         
         // Charger le docteur si seulement l'ID est fourni
@@ -134,4 +164,3 @@ public class ServiceAppointmentImpl implements IServiceAppointment {
         return appointmentRepository.existsById(id);
     }
 }
-

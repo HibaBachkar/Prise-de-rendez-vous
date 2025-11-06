@@ -22,6 +22,8 @@
     <!-- Définition des modules à la racine du projet -->
     <modules>
         <module>discoveryservice</module>
+        <module>config-server</module>
+        <module>api-gateway</module>
         <module>guser-service</module>
     </modules>
 

@@ -1,0 +1,802 @@
+{
+	"info": {
+		"_postman_id": "gestion-rendez-vous-collection",
+		"name": "Gestion Rendez-vous - Microservices",
+		"description": "Collection complète pour tester tous les endpoints des microservices de gestion des rendez-vous médicaux",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Eureka Server",
+			"item": [
+				{
+					"name": "Eureka Dashboard",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url_eureka}}/",
+							"host": ["{{base_url_eureka}}"],
+							"path": [""]
+						},
+						"description": "Accéder au dashboard Eureka"
+					},
+					"response": []
+				},
+				{
+					"name": "Eureka Applications",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url_eureka}}/eureka/apps",
+							"host": ["{{base_url_eureka}}"],
+							"path": ["eureka", "apps"]
+						},
+						"description": "Liste toutes les applications enregistrées dans Eureka"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints pour le serveur Eureka"
+		},
+		{
+			"name": "API Gateway",
+			"item": [
+				{
+					"name": "Gateway Routes",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url_gateway}}/actuator/gateway/routes",
+							"host": ["{{base_url_gateway}}"],
+							"path": ["actuator", "gateway", "routes"]
+						},
+						"description": "Liste toutes les routes configurées dans l'API Gateway"
+					},
+					"response": []
+				},
+				{
+					"name": "Gateway Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url_gateway}}/actuator/health",
+							"host": ["{{base_url_gateway}}"],
+							"path": ["actuator", "health"]
+						},
+						"description": "Vérifie l'état de santé de l'API Gateway"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints pour l'API Gateway"
+		},
+		{
+			"name": "Specialties",
+			"item": [
+				{
+					"name": "Get All Specialties",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Response is an array\", function () {",
+									"    pm.expect(pm.response.json()).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/specialties",
+							"host": ["{{base_url}}"],
+							"path": ["api", "specialties"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Specialty by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Response has id\", function () {",
+									"    pm.expect(pm.response.json()).to.have.property('id');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/specialties/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "specialties", "1"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Specialty",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"pm.test(\"Response has id\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.environment.set('specialty_id', jsonData.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom\": \"Cardiologie\",\n    \"description\": \"Spécialité médicale traitant les maladies du cœur et des vaisseaux sanguins\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/specialties",
+							"host": ["{{base_url}}"],
+							"path": ["api", "specialties"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Specialty",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom\": \"Cardiologie\",\n    \"description\": \"Spécialité médicale traitant les maladies du cœur et des vaisseaux sanguins - Mise à jour\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/specialties/{{specialty_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "specialties", "{{specialty_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Specialty",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 204 or 200\", function () {",
+									"    pm.expect([200, 204]).to.include(pm.response.code);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/specialties/{{specialty_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "specialties", "{{specialty_id}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Doctors",
+			"item": [
+				{
+					"name": "Get All Doctors",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/doctors",
+							"host": ["{{base_url}}"],
+							"path": ["api", "doctors"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Doctor by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/doctors/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "doctors", "1"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Doctor",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set('doctor_id', jsonData.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom\": \"Dupont\",\n    \"prenom\": \"Jean\",\n    \"email\": \"jean.dupont@example.com\",\n    \"telephone\": \"0123456789\",\n    \"numeroRpps\": \"12345678901\",\n    \"specialty\": {\n        \"id\": 1\n    },\n    \"actif\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/doctors",
+							"host": ["{{base_url}}"],
+							"path": ["api", "doctors"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Doctor",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom\": \"Dupont\",\n    \"prenom\": \"Jean\",\n    \"email\": \"jean.dupont.updated@example.com\",\n    \"telephone\": \"0123456789\",\n    \"numeroRpps\": \"12345678901\",\n    \"specialty\": {\n        \"id\": 1\n    },\n    \"actif\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/doctors/{{doctor_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "doctors", "{{doctor_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Doctor",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/doctors/{{doctor_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "doctors", "{{doctor_id}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Patients",
+			"item": [
+				{
+					"name": "Get All Patients",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/patients",
+							"host": ["{{base_url}}"],
+							"path": ["api", "patients"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Patient by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/patients/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "patients", "1"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Patient",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set('patient_id', jsonData.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom\": \"Martin\",\n    \"prenom\": \"Sophie\",\n    \"email\": \"sophie.martin@example.com\",\n    \"telephone\": \"0612345678\",\n    \"dateNaissance\": \"1990-05-15\",\n    \"adresse\": \"123 Rue de la Santé, 75014 Paris\",\n    \"numeroSecu\": \"1900515123456\",\n    \"actif\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/patients",
+							"host": ["{{base_url}}"],
+							"path": ["api", "patients"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Patient",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom\": \"Martin\",\n    \"prenom\": \"Sophie\",\n    \"email\": \"sophie.martin.updated@example.com\",\n    \"telephone\": \"0612345678\",\n    \"dateNaissance\": \"1990-05-15\",\n    \"adresse\": \"123 Rue de la Santé, 75014 Paris\",\n    \"numeroSecu\": \"1900515123456\",\n    \"actif\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/patients/{{patient_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "patients", "{{patient_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Patient",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/patients/{{patient_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "patients", "{{patient_id}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Appointments",
+			"item": [
+				{
+					"name": "Get All Appointments",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/appointments",
+							"host": ["{{base_url}}"],
+							"path": ["api", "appointments"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Appointment by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/appointments/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "appointments", "1"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Appointment",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set('appointment_id', jsonData.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"patient\": {\n        \"id\": 1\n    },\n    \"doctor\": {\n        \"id\": 1\n    },\n    \"dateHeure\": \"2025-11-15T10:00:00\",\n    \"duree\": 30,\n    \"statut\": \"PLANIFIE\",\n    \"motif\": \"Consultation de routine\",\n    \"notes\": \"Première consultation\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/appointments",
+							"host": ["{{base_url}}"],
+							"path": ["api", "appointments"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Appointment",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"patient\": {\n        \"id\": 1\n    },\n    \"doctor\": {\n        \"id\": 1\n    },\n    \"dateHeure\": \"2025-11-15T10:30:00\",\n    \"duree\": 30,\n    \"statut\": \"CONFIRME\",\n    \"motif\": \"Consultation de routine\",\n    \"notes\": \"Consultation confirmée\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/appointments/{{appointment_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "appointments", "{{appointment_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Appointment",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/appointments/{{appointment_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "appointments", "{{appointment_id}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Schedules",
+			"item": [
+				{
+					"name": "Get All Schedules",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/schedules",
+							"host": ["{{base_url}}"],
+							"path": ["api", "schedules"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Schedule",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"doctor\": {\n        \"id\": 1\n    },\n    \"jourSemaine\": \"LUNDI\",\n    \"heureDebut\": \"09:00:00\",\n    \"heureFin\": \"17:00:00\",\n    \"dureeCreneau\": 30\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/schedules",
+							"host": ["{{base_url}}"],
+							"path": ["api", "schedules"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Availabilities",
+			"item": [
+				{
+					"name": "Get All Availabilities",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/availabilities",
+							"host": ["{{base_url}}"],
+							"path": ["api", "availabilities"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Availability",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"doctor\": {\n        \"id\": 1\n    },\n    \"dateDebut\": \"2025-11-10T09:00:00\",\n    \"dateFin\": \"2025-11-10T17:00:00\",\n    \"disponible\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/availabilities",
+							"host": ["{{base_url}}"],
+							"path": ["api", "availabilities"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Medical Records",
+			"item": [
+				{
+					"name": "Get All Medical Records",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/medical-records",
+							"host": ["{{base_url}}"],
+							"path": ["api", "medical-records"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Medical Record",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"patient\": {\n        \"id\": 1\n    },\n    \"dateConsultation\": \"2025-11-06\",\n    \"diagnostic\": \"Examen de routine\",\n    \"symptomes\": \"Aucun symptôme\",\n    \"traitement\": \"Aucun traitement nécessaire\",\n    \"notes\": \"Patient en bonne santé\",\n    \"doctor\": {\n        \"id\": 1\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/medical-records",
+							"host": ["{{base_url}}"],
+							"path": ["api", "medical-records"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Insurances",
+			"item": [
+				{
+					"name": "Get All Insurances",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/insurances",
+							"host": ["{{base_url}}"],
+							"path": ["api", "insurances"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Insurance",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom\": \"Assurance Santé Plus\",\n    \"numeroAssure\": \"AS123456789\",\n    \"dateDebut\": \"2025-01-01\",\n    \"dateFin\": \"2025-12-31\",\n    \"patient\": {\n        \"id\": 1\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/insurances",
+							"host": ["{{base_url}}"],
+							"path": ["api", "insurances"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Consultations",
+			"item": [
+				{
+					"name": "Get All Consultations",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/consultations",
+							"host": ["{{base_url}}"],
+							"path": ["api", "consultations"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Consultation",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"appointment\": {\n        \"id\": 1\n    },\n    \"dateConsultation\": \"2025-11-06\",\n    \"compteRendu\": \"Consultation normale\",\n    \"diagnostic\": \"Patient en bonne santé\",\n    \"symptomes\": \"Aucun\",\n    \"examenClinique\": \"Examen complet effectué\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/consultations",
+							"host": ["{{base_url}}"],
+							"path": ["api", "consultations"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Prescriptions",
+			"item": [
+				{
+					"name": "Get All Prescriptions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/prescriptions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "prescriptions"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Prescription",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"consultation\": {\n        \"id\": 1\n    },\n    \"datePrescription\": \"2025-11-06\",\n    \"medicaments\": \"Paracétamol 500mg\",\n    \"posologie\": \"1 comprimé 3 fois par jour\",\n    \"dureeTraitement\": 7,\n    \"instructions\": \"Prendre après les repas\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/prescriptions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "prescriptions"]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8081",
+			"type": "string"
+		},
+		{
+			"key": "base_url_gateway",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "base_url_eureka",
+			"value": "http://localhost:8761",
+			"type": "string"
+		}
+	]
+}
+
